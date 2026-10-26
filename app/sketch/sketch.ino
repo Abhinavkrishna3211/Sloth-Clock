@@ -228,6 +228,11 @@ void backupTick() {
 }
 
 // ---------- rain microphone (SAI1 block A, register level) ----------
+// libm (expf, log10f) reports errors through __errno, which the sketch runtime does not provide.
+static int errnoValue;
+int *errnoStub() asm("__errno");
+int *errnoStub() { return &errnoValue; }
+
 #define REG(a) (*(volatile uint32_t *)(a))
 const uint32_t RCC_BASE_A = 0x46020C00, PORTB_A = 0x42020400, PORTC_A = 0x42020800;
 const uint32_t SAI1A_A = 0x40015404;  // block A: CR1 +0, CR2 +4, FRCR +8, SLOTR +C, SR +14, DR +1C
