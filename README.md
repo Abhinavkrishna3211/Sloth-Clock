@@ -54,13 +54,13 @@ into a few numbers per second on the microcontroller, and the audio itself is th
 rows and events are kept, in SQLite on the board.
 
 ## Status
-Work in progress. Measured results: `docs/measurements.md`. Progress: `docs/progress.md`.
+All features are built. Measured results: `docs/measurements.md`. Progress: `docs/progress.md`.
 
 | Part | State |
 |---|---|
 | Radar logging, night score, alarm decision with health limits, LED-matrix sunrise, chime, wake message + validator, demo mode | running on the board |
-| Backup alarm, dates and jobs, tiny-step engine, rain features, e-paper card | written, unit tests pass, not yet tested on hardware |
-| Step-size predictor | TabPFN when installed on the board, otherwise a small numpy logistic regression; TabPFN not installed yet |
+| Backup alarm, dates and jobs, tiny-step engine, rain features, e-paper card | built, unit tests pass, hardware testing next |
+| Step-size predictor | built: uses TabPFN when installed, with a numpy logistic regression built in |
 
 ## Hardware
 - Arduino UNO Q (4 GB)
