@@ -1,0 +1,29 @@
+# secrets and local config
+.env
+*.env
+secrets*
+
+# data, logs, models
+*.sqlite
+*.sqlite3
+*.db
+data/
+logs/
+*.log
+*.gguf
+*.wav
+*.mp3
+
+# python / build
+__pycache__/
+*.pyc
+.venv/
+build/
+.pio/
+.vscode/
+
+# raw recordings (never stored)
+recordings/
+*.raw
+*.pcm
+*.flac
