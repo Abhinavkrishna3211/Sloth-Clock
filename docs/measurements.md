@@ -54,3 +54,10 @@ Anything not tested yet says "not yet measured".
 - Earlier runs of the same test while tuning the prompt (same day): 8/2/0 with "out of 100" rejected
   (fixed: the scale is now in the record); 4/1/5 when the model had to write the time itself
   (fixed: code adds the time); 10/0/0 but two +0 records claimed "extra time" (fixed: new validator rule).
+
+### 2026-10-26 Build size with backup alarm and microphone code
+- Setup: `arduino-cli compile --profile default -b arduino:zephyr:unoq` on the board, core 0.90.0.
+- Result: 97,240 bytes of 786,432 flash (12%), 43,789 bytes of 262,144 RAM (16%).
+
+### Not yet measured
+- T5 e-paper refresh time and power, T6/T7 step completion and predictor accuracy, T8 rain detection.
