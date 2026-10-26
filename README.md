@@ -14,6 +14,13 @@ Everything runs offline on an Arduino UNO Q.
 ## Status
 Work in progress. Measured results: `docs/measurements.md`. Progress: `docs/progress.md`.
 
+- Radar logging, night score, alarm decision with health limits, LED-matrix sunrise, chime, wake message
+  and validator: running on the board.
+- Backup alarm on the MCU (rings on its own if Linux misses the alarm), dates and postponed jobs,
+  one tiny step a day, rain features, e-paper card: written, unit tests pass; not yet tested on hardware.
+- Step size predictor: uses TabPFN when it is installed on the board, otherwise a small logistic
+  regression in numpy. Until 20 mornings are logged a fixed rule picks the size. TabPFN is not installed yet.
+
 ## Hardware
 - Arduino UNO Q (4 GB)
 - Seeed MR60BHA2 60 GHz mmWave breathing & heartbeat sensor (on its XIAO ESP32C6 kit)
@@ -37,7 +44,7 @@ This is a comfort device, not a medical one.
 Low voltage (USB) only. No mains wiring.
 
 ## Credits
-- llama.cpp, Gemma 3 (Google), Seeed mmWave and Seeed_GFX2 libraries, TabPFN (Prior Labs), scikit-learn.
+- llama.cpp, Gemma 3 (Google), Seeed mmWave and Seeed_GFX libraries, ArduinoJson, TabPFN (Prior Labs, optional), numpy.
 
 ## License
 MIT
