@@ -1,0 +1,6 @@
+name: Sloth Clock
+description: "Bedside sleep watch and gentle alarm"
+icon: 🦥
+ports: []
+bricks:
+  - arduino:web_ui

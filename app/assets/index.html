@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sloth Clock</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Sloth Clock</h1>
+  <span id="demo-tag" class="tag" hidden>DEMO</span>
+  <span id="wake" class="tag"></span>
+</header>
+
+<main>
+  <section>
+    <h2>Now</h2>
+    <p id="presence">Waiting for radar…</p>
+    <div class="charts">
+      <figure><figcaption>Breathing (per min) <b id="breath">–</b></figcaption><canvas id="c-breath"></canvas></figure>
+      <figure><figcaption>Heart rate (bpm) <b id="heart">–</b></figcaption><canvas id="c-heart"></canvas></figure>
+      <figure><figcaption>Movement (0–100) <b id="move">–</b></figcaption><canvas id="c-move"></canvas></figure>
+    </div>
+    <p class="small">Last 5 minutes, one point every 10 s. Only these small numbers are stored, never audio or radar waveforms.</p>
+  </section>
+
+  <section>
+    <h2>Night score</h2>
+    <p id="night">–</p>
+  </section>
+
+  <section>
+    <h2>Alarm</h2>
+    <p>Next alarm: <b id="next">–</b></p>
+    <form id="settings">
+      <label>Normal alarm <input type="time" name="normal_alarm" required></label>
+      <label>Must be up by <input type="time" name="hard_limit" required></label>
+      <label><input type="checkbox" name="enabled"> On</label>
+      <button>Save</button>
+      <span id="saved" class="small"></span>
+    </form>
+    <p class="small">At most 30 extra minutes, never past "must be up by", no snooze,
+      and not two days in a row unless the night was very poor.</p>
+    <button id="dismiss" class="big">Dismiss alarm</button>
+    <button id="chime">Test chime</button>
+  </section>
+
+  <section>
+    <h2>Last decision <span id="dec-tag" class="tag" hidden>DEMO</span></h2>
+    <p id="message" class="message">–</p>
+    <ul id="rules"></ul>
+    <details><summary>Full record</summary><pre id="record"></pre></details>
+  </section>
+
+  <section>
+    <h2>Demo nap</h2>
+    <p class="small">Lie down for a few minutes. At the end the clock scores that nap, decides, and
+      wakes you right away with a 1-minute sunrise. Demo data is kept apart from real nights.</p>
+    <label>Minutes <input id="demo-min" type="number" min="1" max="60" value="15"></label>
+    <button id="demo-start">Start</button>
+    <button id="demo-stop">Stop</button>
+    <span id="demo-left" class="small"></span>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
