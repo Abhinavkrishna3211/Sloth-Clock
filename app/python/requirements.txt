@@ -1,0 +1,5 @@
+# CPU-only PyTorch: the default aarch64 wheels pull in gigabytes of NVIDIA CUDA packages
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.14.1+cpu
+# 2.x uses the TabPFN v2 weights (public download, no account); later versions need a login
+tabpfn==2.2.1

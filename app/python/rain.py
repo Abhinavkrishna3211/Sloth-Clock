@@ -44,9 +44,9 @@ def detect(rows, labelled):
     pos = sum(1 for _, y in labelled if y)
     method = "rule"
     if pos >= MIN_LABELS and len(labelled) - pos >= MIN_LABELS and mins:
-        model = predictor.fit([x for x, _ in labelled], [int(y) for _, y in labelled])
+        model = predictor.fit([x for x, _ in labelled], [int(y) for _, y in labelled], quick=True)
         flags = [p >= 0.5 for p in predictor.p_true(model, [m["x"] for m in mins])]
-        method = predictor.BACKEND
+        method = "logistic"
     else:
         flags = [rule(m["x"]) for m in mins]
     n, k = len(mins), sum(flags)

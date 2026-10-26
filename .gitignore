@@ -27,3 +27,6 @@ recordings/
 *.raw
 *.pcm
 *.flac
+
+# photos and video for the write-up
+media/

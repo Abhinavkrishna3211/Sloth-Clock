@@ -58,41 +58,55 @@ All features are built. Measured results: `docs/measurements.md`. Progress: `doc
 
 | Part | State |
 |---|---|
-| Radar logging, night score, alarm decision with health limits, LED-matrix sunrise, chime, wake message + validator, demo mode | running on the board |
-| Backup alarm, dates and jobs, tiny-step engine, rain features, e-paper card | built, unit tests pass, hardware testing next |
-| Step-size predictor | built: uses TabPFN when installed, with a numpy logistic regression built in |
+| Radar logging, night score, alarm decision with health limits, LED-matrix sunrise, chime, wake message + validator, demo mode | running on the board; radar about 80-90% against a manual breath count and a reference heart rate |
+| E-paper card, dates and jobs, tiny-step engine (Gemma steps + TabPFN size) | running on the board |
+| Rain (microphone features + classifier) | running on the board: rain bonus (+15 min) tested |
+| Step-size predictor | TabPFN v2 on the board (CPU, offline after a one-time weights download); numpy logistic regression for rain and as fallback |
 
 ## Hardware
 - Arduino UNO Q (4 GB)
 - Seeed MR60BHA2 60 GHz mmWave breathing & heartbeat sensor (on its XIAO ESP32C6 kit)
 - Seeed XIAO ePaper Display Board EE04 + 7.5" monochrome e-paper (800×480)
 - INMP441 I2S microphone (rain detection)
-- Push button, small speaker
+- PAM8403 amplifier + small cavity speaker (chime, on D3)
+- Push button (D2)
 
 ## How it works
 ```
-radar kit (XIAO ESP32C6) --UART--> STM32U585 (sketch)  --Bridge--> Linux (Python app) --Wi-Fi--> e-paper card
-INMP441 mic -------------SAI-----> radar rows, mic features,       SQLite, night score,          (EE04)
-                                   LED-matrix sunrise, chime,      alarm decision, tiny steps,
-                                   button, backup alarm            Gemma 3 1B + validator, web UI
+radar kit (XIAO ESP32C6) --UART-----------------> STM32U585 (sketch)  --Bridge--> Linux (Python app) --Wi-Fi--> e-paper card
+INMP441 mic -------------SAI-----------------------> radar rows, mic features,       SQLite, night score,          (EE04)
+                                                     LED-matrix sunrise, chime,      alarm decision, tiny steps,
+                                                     button, backup alarm            Gemma 3 1B + validator, web UI
 ```
-- **STM32 (real time):** radar frames, rain sound features (hand-written FFT), LED-matrix face and sunrise,
-  chime, button, backup alarm.
+- **Radar kit:** wired to the board. It sends one line per second on a UART (XIAO D10 to UNO Q D0, shared GND)
+  to the STM32 parser.
+- **STM32 (real time):** radar lines, rain sound features (hand-written FFT), LED-matrix face and sunrise,
+  chime (tone on D3 -> PAM8403 -> speaker), button, backup alarm.
 - **Linux (same board):** night score, alarm decision with hard health limits, rain detection, tiny-step engine,
   step-size predictor, Gemma 3 1B via llama.cpp, web page on port 7000, e-paper updates.
 
+## Wiring
+![Wiring schematic](hardware/sloth_clock.png)
+
 ## Repository
 - `app/`: the Arduino App Lab app (`sketch/` for the STM32, `python/` for Linux, `assets/` for the web page)
-- `firmware/radar_forwarder/`: radar kit forwarder
+- `firmware/radar_forwarder/`: radar kit forwarder (UART to the UNO Q)
 - `firmware/epaper_card/`: e-paper card (copy `secrets.example.h` to `secrets.h`)
 - `tests/`: decision, validator, night score, steps and rain tests (`python tests/test_*.py`)
+- `hardware/`: wiring schematic (KiCad, PDF, PNG)
 - `docs/`: measurements and progress
 
 ## Safety
 Low voltage (USB) only. No mains wiring, no heat, no moving parts. This is a comfort device, not a medical one.
 
 ## Credits
-llama.cpp, Gemma 3 (Google), Seeed mmWave and Seeed_GFX libraries, ArduinoJson, TabPFN (Prior Labs, optional), numpy.
+llama.cpp, Gemma 3 (Google), Seeed mmWave and Seeed_GFX libraries, ArduinoJson, numpy.
+Built with TabPFN: the step-size predictor uses TabPFN v2 by Prior Labs (`tabpfn==2.2.1`, Prior Labs License:
+Apache 2.0 with an attribution clause). Usage telemetry is switched off (`TABPFN_DISABLE_TELEMETRY=1`).
 
 ## License
 MIT
+
+## Note on late changes
+The commit "Final polish and bug fixes" (2026-10-27) was made after the deadline (2026-10-26, 12:29 IST).
+Everything up to "Reword README status" (2026-10-26, 12:28 IST) was in place before it.

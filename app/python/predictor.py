@@ -1,15 +1,17 @@
 """Small tabular classifier: TabPFN when it is installed on the board, else logistic regression in numpy.
 
-Used for two jobs: "will the user finish a step of this size today?" and "is this minute rain?".
+Used for two jobs: "will the user finish a step of this size today?" (TabPFN) and "is this minute rain?"
+(always logistic: it sits in the alarm decision, and TabPFN takes ~30 s on the board).
 """
+import importlib.util
+import os
+
 import numpy as np
 
-try:
-    from tabpfn import TabPFNClassifier
-    BACKEND = "tabpfn"
-except Exception:  # not installed: fall back, and say so on the page
-    TabPFNClassifier = None
-    BACKEND = "logistic"
+# Weights live in the app's cache folder (kept across container rebuilds); nothing is sent anywhere.
+os.environ.setdefault("TABPFN_MODEL_CACHE_DIR", "/app/.cache/tabpfn")
+os.environ.setdefault("TABPFN_DISABLE_TELEMETRY", "1")
+BACKEND = "tabpfn" if importlib.util.find_spec("tabpfn") else "logistic"  # imported on first use (~30 s)
 
 
 class _Logistic:
@@ -30,11 +32,12 @@ class _Logistic:
         return np.c_[1 - p, p]
 
 
-def fit(X, y):
-    """Returns a fitted model, or None if there is only one class so far."""
+def fit(X, y, quick=False):
+    """Returns a fitted model, or None if there is only one class so far. quick=True: always logistic."""
     if len(set(y)) < 2:
         return None
-    if TabPFNClassifier is not None:
+    if BACKEND == "tabpfn" and not quick:
+        from tabpfn import TabPFNClassifier
         m = TabPFNClassifier(device="cpu")
         m.fit(np.asarray(X, float), np.asarray(y, int))
         return m

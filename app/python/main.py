@@ -95,9 +95,12 @@ def make_decision(db, key, normal, hard, rows, start, end, min_minutes):
     db.save_decision(key, rec)
     db.event("decision", f"{key} {rec['final_alarm']} +{rec['extra_min']}")
     log.info(f"decision {key}: {rec}")
-    plan_step(db, key, normal, rec)
 
-    def write():  # the model is slow; the alarm never waits for it
+    def write():  # the models are slow; the alarm never waits for them
+        try:
+            plan_step(db, key, normal, rec)
+        except Exception as e:
+            log.error(f"plan_step failed: {e}")
         text, source, problems = wake_message(rec)
         db.set_message(key, text)
         db.event("message", f"{key} {source} {problems}")
@@ -170,7 +173,8 @@ def push_card(view=None):
     d = newest_db().last_decision()
     m = today_step()
     step = f"{m['step']} ({m['minutes']} min)" if m and not m["done"] else ""
-    c = card.content(view, now, s, d, (dates[off:] + dates[:off])[:3], step, d and d["message"])
+    c = card.content(view, now, s, d, (dates[off:] + dates[:off])[:3], step, d and d["message"],
+                     [date.fromisoformat(x["due"]) for x in dates])
     ok, detail = card.push(s["card_url"], c)
     card_state["last"] = {"ts": time.time(), "ok": ok, "detail": detail}
     real.event("card", f"{view} {ok} {detail}")
@@ -320,7 +324,7 @@ def api_chime():
     return _call("chime_test")
 
 
-def api_inject(body: dict):  # test hook: feed one radar CSV line to the MCU parser
+def api_inject(body: dict):  # one radar CSV line (tests) into the MCU parser
     return _call("inject_line", str(body.get("line", ""))[:90])
 
 
@@ -407,6 +411,7 @@ ui.expose_api("POST", "/api/demo/stop", api_demo_stop)
 ui.expose_api("POST", "/api/dismiss", api_dismiss)
 ui.expose_api("POST", "/api/chime", api_chime)
 ui.expose_api("POST", "/api/inject", api_inject)
+ui.expose_api("POST", "/api/radar", api_inject)
 ui.expose_api("POST", "/api/items", api_item_add)
 ui.expose_api("POST", "/api/items/delete", api_item_delete)
 ui.expose_api("POST", "/api/items/done", api_item_done)

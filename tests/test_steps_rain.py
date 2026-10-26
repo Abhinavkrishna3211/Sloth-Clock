@@ -5,6 +5,7 @@ from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "app" / "python"))
+import card  # noqa: E402
 import predictor  # noqa: E402
 import rain  # noqa: E402
 import tasks  # noqa: E402
@@ -75,10 +76,17 @@ def test_rain():
     assert rain.detect(rows(0, 10, -350, -500, 450, 80), [])["minutes"] == 0  # under 20 rows: not a minute
     labelled = [(m["x"], True) for m in rain.minutes(rainy)[:25]] + [(m["x"], False) for m in rain.minutes(quiet)[:25]]
     r = rain.detect(rainy, labelled)
-    assert r["method"] == predictor.BACKEND and r["detected"]
+    assert r["method"] == "logistic" and r["detected"]  # rain stays fast: it is in the alarm decision
+
+
+def test_month():
+    m = card.month(TODAY, [date(2026, 10, 29), date(2026, 11, 2), date(2026, 10, 29)])
+    assert m == {"title": "October 2026", "first": 3, "days": 31, "today": 26, "marks": [29]}  # Oct 1 2026 = Thu
+    assert card.month(date(2028, 2, 10), [])["days"] == 29  # leap year
+    assert card.plain({"m": "I’ve — ok…", "d": [["In 3 days", "Café"]], "n": 5}) ==         {"m": "I've - ok...", "d": [["In 3 days", "Caf"]], "n": 5}  # card fonts are ASCII only
 
 
 if __name__ == "__main__":
-    for t in [test_countdown, test_steps_ok, test_cold_start, test_predictor, test_rain]:
+    for t in [test_countdown, test_steps_ok, test_cold_start, test_predictor, test_rain, test_month]:
         t()
-    print(f"steps/rain: 5/5 pass (predictor backend: {predictor.BACKEND})")
+    print(f"steps/rain/calendar: 6/6 pass (predictor backend: {predictor.BACKEND})")

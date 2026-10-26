@@ -116,16 +116,20 @@ void drawFace() {
   matrix.draw(frame);
 }
 
-// Sunrise: pixels light from the bottom up, in a scattered order, and brighten.
+// Sunrise: a glowing sun rises from the bottom edge, grows and brightens, then the sky fills.
 // p goes 0 -> 1 over the fade.
 void drawSunrise(float p) {
+  float rise = p < 0.7f ? p / 0.7f : 1;
+  float cy = H + 2.5f - rise * (H - 1.5f);  // sun centre: below the edge -> row 4
+  float r = 2.5f + rise;
+  float sky = p > 0.6f ? (p - 0.6f) / 0.4f * 4 : 0;
   for (int y = 0; y < H; y++)
     for (int x = 0; x < W; x++) {
-      float noise = ((x * 7 + y * 13) % 17) / 17.0f;
-      float t = (H - 1 - y) / (float)H * 0.6f + noise * 0.4f;
-      int level = 0;
-      if (p > t) level = 1 + (int)((p - t) / (1.0f - t + 0.001f) * 6);
-      frame[y * W + x] = level > 7 ? 7 : level;
+      float d = sqrtf((x - 6) * (x - 6) + (y - cy) * (y - cy));
+      float v = (d <= r ? 7 : 7 - (d - r) * 2.5f) * (0.4f + 0.6f * p);
+      if (v < sky) v = sky;
+      int level = (int)(v + 0.5f);
+      frame[y * W + x] = level < 0 ? 0 : level > 7 ? 7 : level;
     }
   matrix.draw(frame);
 }
@@ -143,8 +147,11 @@ uint32_t phaseStart = 0, sunriseMs = 0, lastChime = 0, lastDraw = 0;
 volatile bool startReq = false, stopReq = false, chimeReq = false;
 volatile uint32_t reqSunriseS = 600;
 
-// Soft three-note chime, played without blocking the loop.
-const int NOTES[][2] = {{1319, 220}, {1047, 220}, {784, 450}};
+// Soft three-note chime, played three times per ring (0 Hz = pause), without blocking the loop.
+const int NOTES[][2] = {{1319, 220}, {1047, 220}, {784, 450}, {0, 400},
+                        {1319, 220}, {1047, 220}, {784, 450}, {0, 400},
+                        {1319, 220}, {1047, 220}, {784, 450}};
+const int N_NOTES = sizeof(NOTES) / sizeof(NOTES[0]);
 int noteIdx = -1;
 uint32_t noteAt = 0;
 
@@ -152,8 +159,9 @@ void startChime() { noteIdx = 0; noteAt = millis(); }
 
 void chimeTick() {
   if (noteIdx < 0 || millis() < noteAt) return;
-  if (noteIdx >= 3) { noTone(CHIME_PIN); noteIdx = -1; return; }
-  tone(CHIME_PIN, NOTES[noteIdx][0], NOTES[noteIdx][1]);
+  if (noteIdx >= N_NOTES) { noTone(CHIME_PIN); noteIdx = -1; return; }
+  if (NOTES[noteIdx][0]) tone(CHIME_PIN, NOTES[noteIdx][0], NOTES[noteIdx][1]);
+  else noTone(CHIME_PIN);
   noteAt = millis() + NOTES[noteIdx][1] + 60;
   noteIdx++;
 }
@@ -178,7 +186,7 @@ void wakeTick() {
       startChime();
       lastChime = now;
       Bridge.notify("wake_state", 2);
-    } else if (now - lastDraw > 1000) {
+    } else if (now - lastDraw > 200) {
       drawSunrise(p);
       lastDraw = now;
     }

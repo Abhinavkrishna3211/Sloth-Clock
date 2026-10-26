@@ -13,7 +13,7 @@
 #include <Seeed_Arduino_mmWave.h>
 
 HardwareSerial mmWaveSerial(0);   // radar, wired inside the kit (D6/D7)
-HardwareSerial link(1);           // to the UNO Q
+HardwareSerial unoq(1);           // to the UNO Q
 SEEED_MR60BHA2 mmWave;
 
 const int LINK_TX = D10;
@@ -31,7 +31,7 @@ uint32_t lastSeenMs = 0, lastPrintMs = 0;
 
 void setup() {
   Serial.begin(115200);
-  link.begin(115200, SERIAL_8N1, LINK_RX, LINK_TX);
+  unoq.begin(115200, SERIAL_8N1, LINK_RX, LINK_TX);
   mmWave.begin(&mmWaveSerial);
 }
 
@@ -68,6 +68,6 @@ void loop() {
   snprintf(line, sizeof(line), "R,%lu,%.1f,%.1f,%d,%d,%d",
            (unsigned long)now, present ? breath : 0.0f, present ? heart : 0.0f,
            present ? 1 : 0, present ? (int)distanceCm : 0, movement);
-  link.println(line);
+  unoq.println(line);
   Serial.println(line);   // same line on USB for debugging
 }
