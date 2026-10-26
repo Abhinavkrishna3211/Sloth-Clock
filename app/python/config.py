@@ -27,7 +27,10 @@ DECISION_LEAD_MIN = 45
 SUNRISE_S = 600
 DEMO_SUNRISE_S = 60
 DEMO_DEFAULT_MIN = 15
-DEFAULT_SETTINGS = {"normal_alarm": "06:30", "hard_limit": "07:00", "enabled": "1"}
+DEFAULT_SETTINGS = {"normal_alarm": "06:30", "hard_limit": "07:00", "enabled": "1",
+                    "rain": "0", "card_url": ""}
+BACKUP_GRACE_S = 120       # the MCU rings on its own this long after the alarm if no wake started
+BEDTIME = "22:00"          # the card switches to the night view
 
 # Wake message (spec F3)
 LLM_URL = "http://msgpack-rpc-router:8080"  # the host, as seen from the app container

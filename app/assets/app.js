@@ -2,6 +2,7 @@ const $ = (id) => document.getElementById(id);
 const post = (path, body) => fetch(path, {
   method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}),
 }).then((r) => r.json());
+const el = (tag, props) => Object.assign(document.createElement(tag), props);
 
 // Line chart of up to 30 points; zeros mean "no reading" except where lo is 0.
 function chart(canvas, values, color, lo, hi) {
@@ -51,6 +52,8 @@ async function refresh() {
     f.normal_alarm.value = d.settings.normal_alarm;
     f.hard_limit.value = d.settings.hard_limit;
     f.enabled.checked = d.settings.enabled === "1";
+    f.rain.checked = d.settings.rain === "1";
+    f.card_url.value = d.settings.card_url;
     settingsLoaded = true;
   }
 
@@ -66,9 +69,37 @@ async function refresh() {
     $("rules").replaceChildren(...[
       `Alarm ${r.final_alarm} (usual ${r.normal_alarm}, must be up by ${r.hard_limit}): +${r.extra_min} min`,
       ...r.rules,
-    ].map((t) => Object.assign(document.createElement("li"), { textContent: t })));
+    ].map((t) => el("li", { textContent: t })));
     $("record").textContent = JSON.stringify(r, null, 2);
   }
+
+  const st = d.step;
+  $("step").textContent = !st ? "No step yet: it is picked with the alarm decision."
+    : `${st.done ? "✓ " : "→ "}${st.step} (${st.minutes} min)${st.demo ? " [demo]" : ""}`;
+  $("step-why").textContent = !st ? "" : st.info.method === "rule"
+    ? `Size ${st.size}: rule (${st.info.rows} mornings logged; the predictor starts at 20).`
+    : `Size ${st.size}: ${st.info.method}, P(done) ${JSON.stringify(st.info.p_done)}.`;
+
+  $("items").replaceChildren(...d.items.map((i) => {
+    const li = el("li", { textContent: `${i.when ? i.when + " · " : ""}${i.title}`
+      + `${i.kind === "job" && !i.steps ? " (splitting…)" : ""}${i.done ? " ✓" : ""} ` });
+    const del = el("button", { textContent: "×", title: "Delete" });
+    del.onclick = () => post("/api/items/delete", { id: i.id });
+    li.append(del);
+    if (i.steps) {
+      const ul = el("ul");
+      for (const k of ["tiny", "small", "normal"]) ul.append(el("li", { textContent: `${k}: ${i.steps[k]}`, className: "small" }));
+      li.append(ul);
+    }
+    return li;
+  }));
+
+  const rn = d.rain;
+  $("rain").textContent = !rn ? `Off. ${d.rain_labels} labelled minutes.`
+    : `${rn.detected ? "Rain" : "No rain"} in the last hour (${rn.rain_minutes}/${rn.minutes} min, ${rn.method}`
+      + `${rn.confident ? "" : ", not sure"}). ${d.rain_labels} labelled minutes.`;
+  $("card").textContent = d.card
+    ? `Last update ${new Date(d.card.ts * 1000).toLocaleTimeString()}: ${d.card.ok ? "ok" : d.card.detail}` : "Not sent yet.";
 }
 
 $("settings").addEventListener("submit", async (e) => {
@@ -76,6 +107,7 @@ $("settings").addEventListener("submit", async (e) => {
   const f = e.target;
   const r = await post("/api/settings", {
     normal_alarm: f.normal_alarm.value, hard_limit: f.hard_limit.value, enabled: f.enabled.checked ? "1" : "0",
+    rain: f.rain.checked ? "1" : "0", card_url: f.card_url.value,
   });
   $("saved").textContent = r.ok ? "Saved." : r.error;
 });
@@ -83,6 +115,21 @@ $("dismiss").onclick = () => post("/api/dismiss");
 $("chime").onclick = () => post("/api/chime");
 $("demo-start").onclick = () => post("/api/demo/start", { minutes: Number($("demo-min").value) });
 $("demo-stop").onclick = () => post("/api/demo/stop");
+$("step-done").onclick = () => post("/api/step/done");
+$("item").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const f = e.target;
+  const r = await post("/api/items", { title: f.title.value, due: f.due.value, kind: f.kind.value });
+  $("item-msg").textContent = r.ok ? "Added." : r.error;
+  if (r.ok) f.reset();
+});
+const label = async (rain) => {
+  const r = await post("/api/rain/label", { rain });
+  $("rain-msg").textContent = r.ok ? `Labelled ${r.labelled} min.` : r.error;
+};
+$("rain-yes").onclick = () => label(true);
+$("rain-no").onclick = () => label(false);
+$("card-push").onclick = () => post("/api/card/push");
 
 refresh();
 setInterval(refresh, 3000);

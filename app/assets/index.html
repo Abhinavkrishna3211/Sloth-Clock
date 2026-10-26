@@ -37,6 +37,8 @@
       <label>Normal alarm <input type="time" name="normal_alarm" required></label>
       <label>Must be up by <input type="time" name="hard_limit" required></label>
       <label><input type="checkbox" name="enabled"> On</label>
+      <label><input type="checkbox" name="rain"> Rain bonus (mic)</label>
+      <label>Card address <input name="card_url" placeholder="http://192.168.1.50" size="20"></label>
       <button>Save</button>
       <span id="saved" class="small"></span>
     </form>
@@ -51,6 +53,42 @@
     <p id="message" class="message">–</p>
     <ul id="rules"></ul>
     <details><summary>Full record</summary><pre id="record"></pre></details>
+  </section>
+
+  <section>
+    <h2>Today's one tiny step</h2>
+    <p id="step" class="message">No job yet. Add one below.</p>
+    <p id="step-why" class="small"></p>
+    <button id="step-done">Done</button>
+  </section>
+
+  <section>
+    <h2>Dates and jobs</h2>
+    <form id="item">
+      <input name="title" placeholder="Amma's birthday / Clean the desk" required size="28">
+      <input type="date" name="due">
+      <select name="kind"><option value="date">Important date</option><option value="job">Job I keep postponing</option></select>
+      <button>Add</button>
+      <span id="item-msg" class="small"></span>
+    </form>
+    <ul id="items"></ul>
+    <p class="small">Countdowns are computed by the clock. Each job is split once into a first step at three sizes
+      (5, 15, 30 min); after a poor night you get the smallest one.</p>
+  </section>
+
+  <section>
+    <h2>Rain</h2>
+    <p id="rain">Off.</p>
+    <button id="rain-yes">It is raining now</button>
+    <button id="rain-no">Not rain</button>
+    <span id="rain-msg" class="small"></span>
+    <p class="small">Labels the last 3 minutes of sound features. Only numbers per second are stored, never audio.</p>
+  </section>
+
+  <section>
+    <h2>Card</h2>
+    <p id="card" class="small">Not sent yet.</p>
+    <button id="card-push">Update card now</button>
   </section>
 
   <section>
