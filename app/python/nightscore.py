@@ -45,6 +45,7 @@ def night_score(rows, start, end, min_minutes):
                  and in_bed * 2 >= observed)
     return {
         "score": int(round(min(100, max(0, score)))),
+        "out_of": 100,
         "minutes": observed,
         "restless_min": restless,
         "irregular_min": irregular,

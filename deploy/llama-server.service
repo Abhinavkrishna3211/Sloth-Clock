@@ -1,0 +1,14 @@
+# Local language model for the wake messages. Install as a user service on the board:
+#   mkdir -p ~/.config/systemd/user && cp llama-server.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload && systemctl --user enable --now llama-server
+[Unit]
+Description=llama.cpp server (Gemma 3 1B) for Sloth Clock
+After=network-online.target
+
+[Service]
+ExecStart=%h/llama.cpp/llama-server -m %h/models/gemma-3-1b-it-qat-Q4_0.gguf --host 0.0.0.0 --port 8080 -t 3 -c 1024
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

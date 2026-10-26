@@ -17,7 +17,7 @@ cases = [(85, True, None, False, 30), (55, True, None, False, 30), (55, True, RA
 counts = {"model": 0, "model-retry": 0, "template": 0}
 for score, conf, rain, shifted, slack in cases:
     hard = N.replace(hour=6 + (30 + slack) // 60, minute=(30 + slack) % 60)
-    rec = decide(N, hard, {"score": score, "confident": conf}, rain, shifted)
+    rec = decide(N, hard, {"score": score, "confident": conf, "out_of": 100}, rain, shifted)
     t = time.time()
     text, source, problems = wake_message(rec)
     counts[source] += 1

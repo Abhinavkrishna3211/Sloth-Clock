@@ -11,6 +11,8 @@ WORDS = {  # "one" is left out: "one tiny step", "no one" are not numbers
 }
 WORD_RE = re.compile(r"\b(" + "|".join(sorted(WORDS, key=len, reverse=True)) + r")\b", re.I)
 BANNED = re.compile(r"\bsnooze\b", re.I)
+WEATHER = re.compile(r"\b(rain\w*|chill\w*|cold|sunny|sunshine|snow\w*|warm|storm\w*|wind\w*|cloud\w*|weather)\b", re.I)
+EXTRA = re.compile(r"\b(extra|longer|more time|lie[- ]in|sleep in)\b", re.I)
 MAX_CHARS = 240
 
 
@@ -38,6 +40,11 @@ def allowed_values(record):
     return nums, times
 
 
+def _minutes(hhmm):
+    h, m = hhmm.split(":")
+    return int(h) * 60 + int(m)
+
+
 def _time_ok(h, m, ampm, times):
     if h > 23 or m > 59:
         return False
@@ -49,7 +56,7 @@ def _time_ok(h, m, ampm, times):
     return h * 60 + m in times or (h <= 12 and (h % 12 + 12) * 60 + m in times)
 
 
-def validate(text, record):
+def validate(text, record, need_time=False):
     """Returns (ok, problems). Allowed: only numbers and times present in the record."""
     problems = []
     if not text or not text.strip():
@@ -58,6 +65,11 @@ def validate(text, record):
         problems.append(f"too long ({len(text)} chars)")
     if BANNED.search(text):
         problems.append("mentions snooze")
+    rain = record.get("rain") or {}
+    if not (rain.get("detected") and rain.get("confident")) and WEATHER.search(text):
+        problems.append(f"mentions weather ({WEATHER.search(text)[0]}) without rain data")
+    if record.get("extra_min") == 0 and EXTRA.search(text) and not re.search(r"\bno extra\b", text, re.I):
+        problems.append(f"claims extra time ({EXTRA.search(text)[0]}) but the alarm did not move")
     nums, times = allowed_values(record)
 
     def check_time(mt):
@@ -65,6 +77,9 @@ def validate(text, record):
             problems.append(f"time {mt[0].strip()} not in record")
         return " "
 
+    final = record.get("final_alarm")
+    if need_time and final and not any(_time_ok(int(m[1]), int(m[2]), m[3], {_minutes(final)}) for m in TIME_RE.finditer(text)):
+        problems.append(f"does not say the alarm time {final}")
     rest = TIME_RE.sub(check_time, text)  # times first, so 6:45 is not read as 6 and 45
     for n in NUM_RE.findall(rest):  # signs are never parsed: "2-3" is 2 and 3, not -3
         if round(float(n), 1) not in nums:

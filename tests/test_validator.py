@@ -24,16 +24,27 @@ CASES = [  # text, record, should pass
     ("You were restless 2:10-3:30, up at 6:45.", RANGE, True),
     ("Score 52 of 100.", REC, False),
     ("Take one tiny step today. Up at 6:45.", REC, True),
+    ("Good morning, the sun is up.", REC, False),  # must say the alarm time
+    ("Up at 6:45, it is a bit chilly.", REC, False),  # weather without rain data
+    ("Up at 6:45, the rain is soft.", {**REC, "rain": {"detected": True, "confident": True}}, True),
+    ("Up at 6:30, I gave you a little extra time.", {**REC, "extra_min": 0, "final_alarm": "06:30"}, False),
+    ("Up at 6:30, no extra time today.", {**REC, "extra_min": 0, "final_alarm": "06:30"}, True),
     ("", REC, False),
 ]
 
 
 def test_cases():
     for text, rec, want in CASES:
-        ok, why = validate(text, rec)
+        ok, why = validate(text, rec, need_time=True)
         assert ok == want, (text, why)
 
 
+def test_time_optional():
+    assert validate("Morning, sleepyhead. You had a rough night.", REC)[0]
+    assert not validate("Morning, sleepyhead. Up at 7:15.", REC)[0]
+
+
 if __name__ == "__main__":
+    test_time_optional()
     test_cases()
     print(f"validator: {len(CASES)}/{len(CASES)} pass")
